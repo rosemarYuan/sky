@@ -1,4 +1,4 @@
-package com.sky.mapper;
+package com.sky.mapper; // 声明是持久层Mapper的包
 
 import com.sky.entity.Employee;
 import org.apache.ibatis.annotations.Mapper;
