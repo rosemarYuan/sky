@@ -3,6 +3,7 @@ package com.sky.service.impl;
 import com.sky.constant.MessageConstant;
 import com.sky.constant.PasswordConstant;
 import com.sky.constant.StatusConstant;
+import com.sky.context.BaseContext;
 import com.sky.dto.EmployeeDTO;
 import com.sky.dto.EmployeeLoginDTO;
 import com.sky.entity.Employee;
@@ -77,9 +78,10 @@ public class EmployeeServiceImpl implements EmployeeService {
         employee.setUpdateTime(LocalDateTime.now());
 
         // 创建用户ID
-        // TODO 后期改为当前登录用户id
-        employee.setCreateUser(10L);
-        employee.setUpdateUser(10L);
+        // TODO 后期改为当前登录用户id？从JWT中获取用户id？
+        // 正解！ThreadLocal 在拦截器中存储解析出来的当前线程的用户 ID。
+        employee.setCreateUser(BaseContext.getCurrentId());
+        employee.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.insert(employee);
 
