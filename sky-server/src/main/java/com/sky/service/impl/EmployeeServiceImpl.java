@@ -79,14 +79,14 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 赋值未导入的参数（状态，密码，创建时间、更新时间）
         employee.setStatus(StatusConstant.ENABLE);
         employee.setPassword(DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes()));
-        employee.setCreateTime(LocalDateTime.now());
-        employee.setUpdateTime(LocalDateTime.now());
-
-        // 创建用户ID
-        // TODO 后期改为当前登录用户id？从JWT中获取用户id？
-        // 正解！ThreadLocal 在拦截器中存储解析出来的当前线程的用户 ID。
-        employee.setCreateUser(BaseContext.getCurrentId());
-        employee.setUpdateUser(BaseContext.getCurrentId());
+//        employee.setCreateTime(LocalDateTime.now());
+//        employee.setUpdateTime(LocalDateTime.now());
+//
+//        // 创建用户ID
+//        // TODO 后期改为当前登录用户id？从JWT中获取用户id？
+//        // 正解！ThreadLocal 在拦截器中存储解析出来的当前线程的用户 ID。
+//        employee.setCreateUser(BaseContext.getCurrentId());
+//        employee.setUpdateUser(BaseContext.getCurrentId());
 
         employeeMapper.insert(employee);
 
@@ -149,8 +149,8 @@ public class EmployeeServiceImpl implements EmployeeService {
         Employee employee = new Employee();
         // 将与前端对接的DTO转换为员工对象，注意修改当前时间、操作人
         BeanUtils.copyProperties(employeeDTO, employee);
-        employee.setUpdateUser(BaseContext.getCurrentId());
-        employee.setUpdateTime(LocalDateTime.now());
+//        employee.setUpdateUser(BaseContext.getCurrentId());
+//        employee.setUpdateTime(LocalDateTime.now());
         employeeMapper.update(employee);
     }
 
