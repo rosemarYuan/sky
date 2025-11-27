@@ -70,6 +70,10 @@ public class WebMvcConfiguration extends WebMvcConfigurationSupport {
     protected void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/doc.html").addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
+
+        // 本地静态路径
+        registry.addResourceHandler("/static/**")
+                .addResourceLocations("file:/Volumes/SANSUNG/Java/Project1/sky-take-out/sky-server/src/main/resources/uplode/");
     }
 
     /**
