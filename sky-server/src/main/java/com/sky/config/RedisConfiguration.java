@@ -1,5 +1,10 @@
 package com.sky.config;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,18 +31,22 @@ public class RedisConfiguration {
 
         // 设置redis连接工厂对象
         redisTemplate.setConnectionFactory(redisConnectionFactory);
+
+        /* 配置 ObjectMapper，注册 JavaTimeModule 模块，
+           Jackson 才能正确处理 LocalDateTime
+        */
+        ObjectMapper objectMapper = new ObjectMapper();
+        // 注册 Java 8 时间模块
+        objectMapper.registerModule(new JavaTimeModule());
+        // 设置可视度
+        objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        // 启动默认的类型处理（解决反序列化时不知道是哪个类的问题）
+        objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance, ObjectMapper.DefaultTyping.NON_FINAL);
+
+
         // 设置redis key 序列化器
         redisTemplate.setKeySerializer(new StringRedisSerializer());
-
-        // 建议补充的部分：设置 Value 的序列化器为 JSON
-        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-
-        // 4. 设置 Hash Key (Field) 的序列化器 (解决你图片中 Key 列的乱码)
-        redisTemplate.setHashKeySerializer(new StringRedisSerializer());
-
-        // 5. 设置 Hash Value 的序列化器 (解决你图片中 Value 列的乱码)
-        redisTemplate.setHashValueSerializer(new StringRedisSerializer());
-
+        redisTemplate.setValueSerializer(new GenericJackson2JsonRedisSerializer(objectMapper));
 
         return redisTemplate;
     }
