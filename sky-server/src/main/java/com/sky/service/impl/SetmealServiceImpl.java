@@ -79,7 +79,7 @@ public class SetmealServiceImpl implements SetmealService {
      * 批量删除套餐
      * @param ids
      */
-    @Override
+    @Transactional
     public void deleteBatch(List<Long> ids) {
         ids.forEach(id -> {
             Setmeal setmeal = setmealMapper.getById(id);
