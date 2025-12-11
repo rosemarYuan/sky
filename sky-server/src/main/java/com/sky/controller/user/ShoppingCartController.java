@@ -54,4 +54,9 @@ public class ShoppingCartController {
         shoppingCartService.cleanShoppingCart();
         return Result.success();
     }
+
+    /**
+     * 缺少减少购物车功能
+     * /sub接口
+     */
 }
