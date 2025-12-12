@@ -38,4 +38,7 @@ public interface OrderMapper {
 
     @Update("update orders set status = #{orderStatus},pay_status = #{orderPaidStatus} ,checkout_time = #{check_out_time} where id = #{id}")
     void updateStatus(Integer orderStatus, Integer orderPaidStatus, LocalDateTime check_out_time, Long id);
+
+    @Select("select count(*) from orders where status = #{status}")
+    Integer countStatue(Integer status);
 }
