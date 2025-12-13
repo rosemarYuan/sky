@@ -54,8 +54,6 @@ public class OrderTask {
         if(ordersList != null && ordersList.size() > 0 ){
             for(Orders orders : ordersList){
                 orders.setStatus(Orders.COMPLETED);
-                orders.setCancelReason("订单自动确认");
-                orders.setCancelTime(LocalDateTime.now());
                 orderMapper.update(orders);
             }
         }
