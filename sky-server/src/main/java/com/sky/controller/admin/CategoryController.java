@@ -31,7 +31,6 @@ public class CategoryController {
      */
     @PostMapping
     @ApiOperation("新增分类")
-    @Scheduled(cron = "0/5 * * * * ?")
     public Result<String> save(@RequestBody CategoryDTO categoryDTO){
         log.info("新增分类，{}",categoryDTO);
         categoryService.save(categoryDTO);
