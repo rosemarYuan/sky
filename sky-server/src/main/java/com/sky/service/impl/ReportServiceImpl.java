@@ -5,15 +5,20 @@ import com.sky.entity.Orders;
 import com.sky.mapper.OrderMapper;
 import com.sky.mapper.UserMapper;
 import com.sky.service.ReportService;
-import com.sky.vo.OrderReportVO;
-import com.sky.vo.SalesTop10ReportVO;
-import com.sky.vo.TurnoverReportVO;
-import com.sky.vo.UserReportVO;
+import com.sky.service.WorkspaceService;
+import com.sky.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xssf.usermodel.XSSFRow;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -32,6 +37,9 @@ public class ReportServiceImpl implements ReportService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private WorkspaceService workspaceService;
 
     /**
      * 营业额统计
@@ -191,6 +199,83 @@ public class ReportServiceImpl implements ReportService {
                 .nameList(StringUtils.join(names, ","))       // "鱼香肉丝,宫保鸡丁,米饭"
                 .numberList(StringUtils.join(numbers, ","))   // "200,150,100"
                 .build();
+    }
+
+    /**
+     * 导出运营数据报表
+     */
+    @Override
+    public void exportBusinessData(HttpServletResponse response) {
+        // 1. 查询数据库，获取最近30天的运营数据
+        LocalDate dateBegin = LocalDate.now().minusDays(30);
+        LocalDate dateEnd = LocalDate.now().minusDays(1);
+
+        // 查询概览数据（这是Service里封装好的方法，查询某段时间内的 营业额、订单完成率等）
+        BusinessDataVO businessData = workspaceService.getBusinessData(LocalDateTime.of(dateBegin, LocalTime.MIN), LocalDateTime.of(dateEnd, LocalTime.MAX));
+
+        // 2. 通过输入流读取 Excel 模板文件
+        // 路径基于 classpath，对应 src/main/resources/template/运营数据报表模板.xlsx
+        InputStream in = this.getClass().getClassLoader().getResourceAsStream("template/运营数据报表模板.xlsx");
+
+        try {
+            // 3. 基于模板文件创建一个新的 Excel 对象 (Workbook)
+            XSSFWorkbook excel = new XSSFWorkbook(in);
+
+            // 4. 获取第一个页签 (Sheet1)
+            XSSFSheet sheet = excel.getSheet("Sheet1");
+
+            // ------------------ 填充概览数据 (表格上方) ------------------
+
+            // 填充时间范围：第2行，第2列 (索引从0开始，Row 1, Cell 1)
+            sheet.getRow(1).getCell(1).setCellValue("时间：" + dateBegin + "至" + dateEnd);
+
+            // 获得第4行 (Row 3)
+            XSSFRow row = sheet.getRow(3);
+            row.getCell(2).setCellValue(businessData.getTurnover());       // 第3列：营业额
+            row.getCell(4).setCellValue(businessData.getOrderCompletionRate()); // 第5列：订单完成率
+            row.getCell(6).setCellValue(businessData.getNewUsers());       // 第7列：新增用户数
+
+            // 获得第5行 (Row 4)
+            row = sheet.getRow(4);
+            row.getCell(2).setCellValue(businessData.getValidOrderCount()); // 第3列：有效订单
+            row.getCell(4).setCellValue(businessData.getUnitPrice());       // 第5列：平均客单价
+
+            // ------------------ 填充明细数据 (表格下方列表) ------------------
+
+            // 5. 循环查询每一天的数据，并填入下方表格
+            for (int i = 0; i < 30; i++) {
+                LocalDate date = dateBegin.plusDays(i);
+                // 查询某一天的详细数据
+                BusinessDataVO data = workspaceService.getBusinessData(LocalDateTime.of(date, LocalTime.MIN), LocalDateTime.of(date, LocalTime.MAX));
+
+                // 从第8行开始往下填 (Row 7)
+                row = sheet.getRow(7 + i);
+                if (row == null) {
+                    // 如果模板里行不够，就创建一个新行
+                    row = sheet.createRow(7 + i);
+                }
+
+                row.getCell(1).setCellValue(date.toString());            // 日期
+                row.getCell(2).setCellValue(data.getTurnover());         // 营业额
+                row.getCell(3).setCellValue(data.getValidOrderCount());  // 有效订单
+                row.getCell(4).setCellValue(data.getOrderCompletionRate()); // 完成率
+                row.getCell(5).setCellValue(data.getUnitPrice());        // 平均客单价
+                row.getCell(6).setCellValue(data.getNewUsers());         // 新增用户
+            }
+
+            // ------------------ 6. 输出文件 ------------------
+
+            // 通过输出流将 Excel 文件下载到客户端浏览器
+            ServletOutputStream out = response.getOutputStream();
+            excel.write(out);
+
+            // 关闭资源
+            out.close();
+            excel.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**

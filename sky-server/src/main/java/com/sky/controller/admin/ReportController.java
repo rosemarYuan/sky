@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletResponse;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -83,5 +84,18 @@ public class ReportController {
 
         return Result.success(reportService.getTop10Statistics(begin, end));
     }
+
+    /**
+     * 5. 导出运营数据报表 (Excel)
+     * @param response 用于回写文件流
+     */
+    @GetMapping("/export")
+    @ApiOperation("导出运营数据报表")
+    public void export(HttpServletResponse response) {
+        log.info("导出运营数据报表");
+        reportService.exportBusinessData(response);
+    }
+
+
 
 }
